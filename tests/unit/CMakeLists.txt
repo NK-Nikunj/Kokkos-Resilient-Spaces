@@ -7,7 +7,8 @@
 add_custom_target(unit)
 
 set(_tests
-    resilient_spaces
+    range_policy
+    md_range_policy
 )
 
 foreach(_test ${_tests})

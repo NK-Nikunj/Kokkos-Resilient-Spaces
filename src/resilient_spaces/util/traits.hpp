@@ -9,13 +9,26 @@
 namespace Kokkos { namespace resilience { namespace traits {
 
     template <typename ExecutionSpace, typename... Traits>
-    struct extract_args
+    struct RangePolicyExtracter
     {
         using execution_space = ExecutionSpace;
         using base_execution_space =
             typename execution_space::base_execution_space;
+
         using RangePolicy =
             Kokkos::RangePolicy<base_execution_space, Traits...>;
+        using validator = typename execution_space::validator_type;
+    };
+
+    template <typename ExecutionSpace, typename... Traits>
+    struct MDRangePolicyExtracter
+    {
+        using execution_space = ExecutionSpace;
+        using base_execution_space =
+            typename execution_space::base_execution_space;
+
+        using MDRangePolicy =
+            Kokkos::MDRangePolicy<base_execution_space, Traits...>;
         using validator = typename execution_space::validator_type;
     };
 

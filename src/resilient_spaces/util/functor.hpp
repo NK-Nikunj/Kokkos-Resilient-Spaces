@@ -23,13 +23,13 @@ namespace Kokkos { namespace resilience { namespace util {
         {
         }
 
-        template <typename ValueType>
-        KOKKOS_FUNCTION void operator()(ValueType i) const
+        template <typename... ValueType>
+        KOKKOS_FUNCTION void operator()(ValueType&&... i) const
         {
             for (std::uint64_t n = 0u; n != replays; ++n)
             {
-                auto result = functor(i);
-                bool is_correct = validator(i, result);
+                auto result = functor(i...);
+                bool is_correct = validator(i..., result);
 
                 if (is_correct)
                     break;
@@ -69,19 +69,19 @@ namespace Kokkos { namespace resilience { namespace util {
         {
         }
 
-        template <typename ValueType>
-        KOKKOS_FUNCTION void operator()(ValueType i) const
+        template <typename... ValueType>
+        KOKKOS_FUNCTION void operator()(ValueType&&... i) const
         {
             using return_type =
-                typename std::invoke_result<Functor, ValueType>::type;
+                typename std::invoke_result<Functor, ValueType...>::type;
 
             bool is_valid = false;
             return_type final_result{};
 
             for (std::uint64_t n = 0u; n != replicates; ++n)
             {
-                auto result = functor(i);
-                bool is_correct = validator(i, result);
+                auto result = functor(i...);
+                bool is_correct = validator(i..., result);
 
                 if (is_correct && !is_valid)
                 {
@@ -121,19 +121,19 @@ namespace Kokkos { namespace resilience { namespace util {
         {
         }
 
-        template <typename ValueType>
-        KOKKOS_FUNCTION void operator()(ValueType i) const
+        template <typename... ValueType>
+        KOKKOS_FUNCTION void operator()(ValueType&&... i) const
         {
             using return_type =
-                typename std::invoke_result<Functor, ValueType>::type;
+                typename std::invoke_result<Functor, ValueType...>::type;
 
-            return_type result_1 = functor(i);
-            return_type result_2 = functor(i);
+            return_type result_1 = functor(i...);
+            return_type result_2 = functor(i...);
 
             if (result_1 == result_2)
                 return;
 
-            return_type result_3 = functor(i);
+            return_type result_3 = functor(i...);
 
             if (result_1 == result_3)
                 return;
