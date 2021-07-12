@@ -35,13 +35,19 @@ int main(int argc, char* argv[])
         // Host only variant
         {
             Kokkos::DefaultHostExecutionSpace inst{};
+
             // Replay Strategy
             Kokkos::resilience::ResilientReplay<
                 Kokkos::DefaultHostExecutionSpace, validator>
                 replay_inst(3, validate, inst);
+
+            // Replicate strategies
+            Kokkos::resilience::ResilientReplicate<
+                Kokkos::DefaultHostExecutionSpace>
+                replicate_inst(inst);
             Kokkos::resilience::ResilientReplicateValidate<
                 Kokkos::DefaultHostExecutionSpace, validator>
-                replicate_inst(3, validate, inst);
+                replicate_validate_inst(3, validate, inst);
 
             Kokkos::parallel_for(
                 Kokkos::RangePolicy<Kokkos::resilience::ResilientReplay<
@@ -51,40 +57,59 @@ int main(int argc, char* argv[])
             Kokkos::fence();
 
             Kokkos::parallel_for(
+                Kokkos::RangePolicy<Kokkos::resilience::ResilientReplicate<
+                    Kokkos::DefaultHostExecutionSpace>>(replicate_inst, 0, 100),
+                op);
+            Kokkos::fence();
+
+            Kokkos::parallel_for(
                 Kokkos::RangePolicy<
                     Kokkos::resilience::ResilientReplicateValidate<
                         Kokkos::DefaultHostExecutionSpace, validator>>(
-                    replicate_inst, 0, 100),
+                    replicate_validate_inst, 0, 100),
                 op);
             Kokkos::fence();
         }
 
         // Device only variant
-        // {
-        //     Kokkos::DefaultExecutionSpace inst{};
-        //     // Replay Strategy
-        //     Kokkos::resilience::ResilientReplay<Kokkos::DefaultExecutionSpace,
-        //         validator>
-        //         replay_inst(3, validate, inst);
-        //     Kokkos::resilience::ResilientReplicateValidate<
-        //         Kokkos::DefaultExecutionSpace, validator>
-        //         replicate_inst(3, validate, inst);
+        {
+            Kokkos::DefaultExecutionSpace inst{};
 
-        //     Kokkos::parallel_for(
-        //         Kokkos::RangePolicy<Kokkos::resilience::ResilientReplay<
-        //             Kokkos::DefaultExecutionSpace, validator>>(
-        //             replay_inst, 0, 100),
-        //         op);
-        //     Kokkos::fence();
+            // Replay Strategy
+            Kokkos::resilience::ResilientReplay<Kokkos::DefaultExecutionSpace,
+                validator>
+                replay_inst(3, validate, inst);
 
-        //     Kokkos::parallel_for(
-        //         Kokkos::RangePolicy<
-        //             Kokkos::resilience::ResilientReplicateValidate<
-        //                 Kokkos::DefaultExecutionSpace, validator>>(
-        //             replicate_inst, 0, 100),
-        //         op);
-        //     Kokkos::fence();
-        // }
+            // Replicate strategies
+            Kokkos::resilience::ResilientReplicate<
+                Kokkos::DefaultExecutionSpace>
+                replicate_inst(inst);
+            Kokkos::resilience::ResilientReplicateValidate<
+                Kokkos::DefaultExecutionSpace, validator>
+                replicate_validate_inst(3, validate, inst);
+
+            Kokkos::parallel_for(
+                Kokkos::RangePolicy<Kokkos::resilience::ResilientReplay<
+                    Kokkos::DefaultExecutionSpace, validator>>(
+                    replay_inst, 0, 100),
+                op);
+            Kokkos::fence();
+
+            Kokkos::parallel_for(
+                Kokkos::RangePolicy<Kokkos::resilience::ResilientReplicate<
+                    Kokkos::DefaultExecutionSpace>>(
+                    replicate_validate_inst, 0, 100),
+                op);
+            Kokkos::fence();
+
+            Kokkos::parallel_for(
+                Kokkos::RangePolicy<
+                    Kokkos::resilience::ResilientReplicateValidate<
+                        Kokkos::DefaultExecutionSpace, validator>>(
+                    replicate_validate_inst, 0, 100),
+                op);
+            Kokkos::fence();
+        }
         std::cout << "Execution Complete" << std::endl;
     }
 

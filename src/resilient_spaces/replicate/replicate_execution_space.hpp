@@ -60,6 +60,7 @@ namespace Kokkos { namespace resilience {
     public:
         // Typedefs for the ResilientReplicate Execution Space
         using base_execution_space = ExecutionSpace;
+        using validator_type = void;
 
         using execution_space = ResilientReplicate;
         using memory_space = typename ExecutionSpace::memory_space;

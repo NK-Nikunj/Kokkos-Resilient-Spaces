@@ -16,30 +16,28 @@ namespace Kokkos { namespace Impl {
     template <typename FunctorType, typename... Traits>
     class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         Kokkos::resilience::ResilientReplay<
-            typename Kokkos::resilience::traits::RangePolicyBase<
+            typename Kokkos::resilience::traits::extract_args<
                 Traits...>::base_execution_space,
-            typename Kokkos::resilience::traits::RangePolicyBase<
+            typename Kokkos::resilience::traits::extract_args<
                 Traits...>::validator>>
     {
     public:
         using Policy = Kokkos::RangePolicy<Traits...>;
-        using BasePolicy = typename Kokkos::resilience::traits::RangePolicyBase<
+        using BasePolicy = typename Kokkos::resilience::traits::extract_args<
             Traits...>::RangePolicy;
         using validator_type =
-            typename Kokkos::resilience::traits::RangePolicyBase<
+            typename Kokkos::resilience::traits::extract_args<
                 Traits...>::validator;
         using base_execution_space =
-            typename Kokkos::resilience::traits::RangePolicyBase<
+            typename Kokkos::resilience::traits::extract_args<
                 Traits...>::base_execution_space;
+
         using base_type = ParallelFor<
             Kokkos::resilience::util::ResilientReplayValidateFunctor<
                 base_execution_space, FunctorType, validator_type>,
-            typename Kokkos::resilience::traits::RangePolicyBase<
-                Traits...>::RangePolicy,
-            typename Kokkos::resilience::traits::RangePolicyBase<
-                Traits...>::base_execution_space>;
+            BasePolicy, base_execution_space>;
 
-        ParallelFor(FunctorType const& arg_functor, const Policy& arg_policy)
+        ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
           : m_functor(arg_functor)
           , m_policy(arg_policy)
         {
