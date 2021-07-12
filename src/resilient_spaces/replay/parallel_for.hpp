@@ -16,20 +16,72 @@ namespace Kokkos { namespace Impl {
     template <typename FunctorType, typename... Traits>
     class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         Kokkos::resilience::ResilientReplay<
-            typename Kokkos::resilience::traits::extract_args<
+            typename Kokkos::resilience::traits::RangePolicyExtracter<
                 Traits...>::base_execution_space,
-            typename Kokkos::resilience::traits::extract_args<
+            typename Kokkos::resilience::traits::RangePolicyExtracter<
                 Traits...>::validator>>
     {
     public:
         using Policy = Kokkos::RangePolicy<Traits...>;
-        using BasePolicy = typename Kokkos::resilience::traits::extract_args<
-            Traits...>::RangePolicy;
+        using BasePolicy =
+            typename Kokkos::resilience::traits::RangePolicyExtracter<
+                Traits...>::RangePolicy;
         using validator_type =
-            typename Kokkos::resilience::traits::extract_args<
+            typename Kokkos::resilience::traits::RangePolicyExtracter<
                 Traits...>::validator;
         using base_execution_space =
-            typename Kokkos::resilience::traits::extract_args<
+            typename Kokkos::resilience::traits::RangePolicyExtracter<
+                Traits...>::base_execution_space;
+
+        using base_type = ParallelFor<
+            Kokkos::resilience::util::ResilientReplayValidateFunctor<
+                base_execution_space, FunctorType, validator_type>,
+            BasePolicy, base_execution_space>;
+
+        ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
+          : m_functor(arg_functor)
+          , m_policy(arg_policy)
+        {
+        }
+
+        void execute() const
+        {
+            Kokkos::resilience::util::ResilientReplayValidateFunctor<
+                base_execution_space, FunctorType, validator_type>
+                inst(m_functor, m_policy.space().validator(),
+                    m_policy.space().replays());
+
+            // Call the underlying ParallelFor
+            base_type closure(inst, m_policy);
+            closure.execute();
+
+            if (inst.is_incorrect())
+                throw std::runtime_error("Program ran out of replay options.");
+        }
+
+    private:
+        const FunctorType m_functor;
+        const Policy m_policy;
+    };
+
+    template <typename FunctorType, typename... Traits>
+    class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
+        Kokkos::resilience::ResilientReplay<
+            typename Kokkos::resilience::traits::MDRangePolicyExtracter<
+                Traits...>::base_execution_space,
+            typename Kokkos::resilience::traits::MDRangePolicyExtracter<
+                Traits...>::validator>>
+    {
+    public:
+        using Policy = Kokkos::MDRangePolicy<Traits...>;
+        using BasePolicy =
+            typename Kokkos::resilience::traits::MDRangePolicyExtracter<
+                Traits...>::MDRangePolicy;
+        using validator_type =
+            typename Kokkos::resilience::traits::MDRangePolicyExtracter<
+                Traits...>::validator;
+        using base_execution_space =
+            typename Kokkos::resilience::traits::MDRangePolicyExtracter<
                 Traits...>::base_execution_space;
 
         using base_type = ParallelFor<
