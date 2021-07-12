@@ -9,7 +9,7 @@
 namespace Kokkos { namespace resilience { namespace traits {
 
     template <typename ExecutionSpace, typename... Traits>
-    struct RangePolicyBase
+    struct extract_args
     {
         using execution_space = ExecutionSpace;
         using base_execution_space =
