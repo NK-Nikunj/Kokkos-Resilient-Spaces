@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdlib>
 
 namespace Kokkos { namespace resilience { namespace util {
 
@@ -122,13 +123,13 @@ namespace Kokkos { namespace resilience { namespace util {
         }
 
         template <typename... ValueType>
-        KOKKOS_FUNCTION void operator()(ValueType&&... i) const
+        KOKKOS_FUNCTION void operator()(ValueType... i) const
         {
             using return_type =
                 typename std::invoke_result<Functor, ValueType...>::type;
 
-            return_type result_1 = functor(i...);
-            return_type result_2 = functor(i...);
+            auto result_1 = functor(i...);
+            auto result_2 = functor(i...);
 
             if (result_1 == result_2)
                 return;

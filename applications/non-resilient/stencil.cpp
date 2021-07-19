@@ -20,20 +20,21 @@ using namespace heatdis;
 
 int main(int argc, char* argv[])
 {
-    int rank, nbProcs, nbLines, M;
+    std::size_t rank, nbProcs, nbLines, M;
     double wtime, memSize, localerror, globalerror = 1;
 
     namespace bpo = boost::program_options;
     bpo::options_description desc("Heatdis");
 
     desc.add_options()(
-        "size", bpo::value<std::size_t>()->default_value(100), "Problem Size");
-    desc.add_options()("nsteps", bpo::value<std::size_t>()->default_value(600),
+        "size", bpo::value<std::size_t>()->default_value(100u), "Problem Size");
+    desc.add_options()("nsteps", bpo::value<std::size_t>()->default_value(600u),
         "Number of timesteps");
     desc.add_options()("precision",
         bpo::value<double>()->default_value(0.00001), "Minimum precision");
-    desc.add_options()("config", bpo::value<std::string>());
-    desc.add_options()("scale", bpo::value<std::string>());
+    // desc.add_options()("config", bpo::value<std::string>());
+    desc.add_options()(
+        "scale", bpo::value<std::string>()->default_value("weak"));
 
     bpo::variables_map vm;
 
@@ -51,8 +52,11 @@ int main(int argc, char* argv[])
         strong = 1;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &nbProcs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    int mpi_nbProcs, mpi_rank;
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi_nbProcs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+    nbProcs = mpi_nbProcs, rank = mpi_rank;
 
     std::size_t mem_size = vm["size"].as<std::size_t>();
 
@@ -67,14 +71,14 @@ int main(int argc, char* argv[])
         if (!strong)
         {
             /* weak scaling */
-            M = (int) sqrt((double) (mem_size * 1024.0 * 1024.0 * nbProcs) /
+            M = sqrt((double) (mem_size * 1024.0 * 1024.0 * nbProcs) /
                 (2 * sizeof(double)));    // two matrices needed
             nbLines = (M / nbProcs) + 3;
         }
         else
         {
             /* strong scaling */
-            M = (int) sqrt((double) (mem_size * 1024.0 * 1024.0 * nbProcs) /
+            M = sqrt((double) (mem_size * 1024.0 * 1024.0 * nbProcs) /
                 (2 * sizeof(double) * nbProcs));    // two matrices needed
             nbLines = (M / nbProcs) + 3;
         }
@@ -92,12 +96,12 @@ int main(int argc, char* argv[])
         if (rank == 0)
             if (!strong)
             {
-                printf("Local data size is %d x %d = %f MB (%lu).\n", M,
+                printf("Local data size is %lu x %lu = %f MB (%lu).\n", M,
                     nbLines, memSize, mem_size);
             }
             else
             {
-                printf("Local data size is %d x %d = %f MB (%lu).\n", M,
+                printf("Local data size is %lu x %lu = %f MB (%lu).\n", M,
                     nbLines, memSize, mem_size / nbProcs);
             }
         if (rank == 0)

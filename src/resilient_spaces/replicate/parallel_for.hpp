@@ -163,7 +163,7 @@ namespace Kokkos { namespace Impl {
 
     private:
         const FunctorType m_functor;
-        const Policy m_policy;
+        const BasePolicy m_policy;
     };
 
     template <typename FunctorType, typename... Traits>
@@ -188,7 +188,8 @@ namespace Kokkos { namespace Impl {
 
         ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
           : m_functor(arg_functor)
-          , m_policy(arg_policy)
+          , m_policy(base_execution_space{arg_policy.space()},
+                arg_policy.m_lower, arg_policy.m_upper)
         {
         }
 
@@ -209,7 +210,7 @@ namespace Kokkos { namespace Impl {
 
     private:
         const FunctorType m_functor;
-        const Policy m_policy;
+        const BasePolicy m_policy;
     };
 
 }}    // namespace Kokkos::Impl
