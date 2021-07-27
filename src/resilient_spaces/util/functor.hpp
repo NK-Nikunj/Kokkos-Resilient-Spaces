@@ -123,18 +123,15 @@ namespace Kokkos { namespace resilience { namespace util {
         }
 
         template <typename... ValueType>
-        KOKKOS_FUNCTION void operator()(ValueType... i) const
+        KOKKOS_FUNCTION void operator()(ValueType&&... i) const
         {
-            using return_type =
-                typename std::invoke_result<Functor, ValueType...>::type;
-
-            auto result_1 = functor(i...);
-            auto result_2 = functor(i...);
+            auto result_1 = functor(std::forward<ValueType>(i)...);
+            auto result_2 = functor(std::forward<ValueType>(i)...);
 
             if (result_1 == result_2)
                 return;
 
-            return_type result_3 = functor(i...);
+            auto result_3 = functor(std::forward<ValueType>(i)...);
 
             if (result_1 == result_3)
                 return;

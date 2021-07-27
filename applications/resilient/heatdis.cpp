@@ -28,10 +28,8 @@ namespace heatdis {
     {
         MPI_Request req1[2], req2[2];
         MPI_Status status1[2], status2[2];
-        // double localerror;
-        // localerror = 0;
-        Kokkos::View<double*, Kokkos::MemoryTraits<Kokkos::Atomic>> localerror(
-            "localerror", 1);
+
+        Kokkos::View<double*> localerror("localerror", 1);
         Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace>
             localerror_host("localerror_host", 1);
         localerror_host[0] = 0.;
@@ -51,11 +49,9 @@ namespace heatdis {
         using mdrange_policy = Kokkos::MDRangePolicy<Kokkos::Rank<2>>;
 
         Kokkos::parallel_for(
-            "copy_g", resilient_mdrange_policy({0u, 0u}, {nbLines, M}),
+            "copy_g", mdrange_policy({0u, 0u}, {nbLines, M}),
             KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                 h((i * M) + j) = g((i * M) + j);
-
-                return h((i * M) + j);
             });
 
         double* g_raw = g.data();
@@ -80,7 +76,7 @@ namespace heatdis {
                 WORKTAG, MPI_COMM_WORLD, &req2[1]);
         }
 
-        /* this should probably include ALL ranks 
+        /* this should probably include ALL ranks
      * (currently excludes leftmost and rightmost)
      */
         if (rank > 0)
@@ -94,7 +90,9 @@ namespace heatdis {
 
         /* perform the computation */
         Kokkos::parallel_for(
-            "compute", resilient_mdrange_policy({1u, 0u}, {nbLines - 1, M}),
+            "compute",
+            resilient_mdrange_policy(
+                replicate_inst, {1u, 0u}, {nbLines - 1, M}),
             KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                 g((i * M) + j) = 0.25 *
                     (h(((i - 1) * M) + j) + h(((i + 1) * M) + j) +
