@@ -6,3 +6,6 @@
 
 add_executable(stencil_resilient stencil.cpp heatdis.cpp)
 target_link_libraries(stencil_resilient PUBLIC Kokkos::kokkos MPI::MPI_CXX Boost::program_options)
+
+add_executable(ABFT3D_resilient ABFT3D.cpp)
+target_link_libraries(ABFT3D_resilient PUBLIC Kokkos::kokkos Boost::program_options)
