@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
             Kokkos::parallel_for(
                 Kokkos::MDRangePolicy<Kokkos::resilience::ResilientReplicate<
                                           Kokkos::DefaultExecutionSpace>,
-                    Kokkos::Rank<2>>(replicate_validate_inst, {0, 0}, {10, 10}),
+                    Kokkos::Rank<2>>(replicate_inst, {0, 0}, {10, 10}),
                 op);
             Kokkos::fence();
 

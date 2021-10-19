@@ -16,11 +16,27 @@ struct validator
     }
 };
 
+struct reduction_validator
+{
+    KOKKOS_FUNCTION bool operator()(double const& result) const
+    {
+        return (result == 100);
+    }
+};
+
 struct operation
 {
     KOKKOS_FUNCTION int operator()(int) const
     {
         return 42;
+    }
+};
+
+struct reduction_op
+{
+    KOKKOS_FUNCTION void operator()(const int i, double& sum) const
+    {
+        sum += 1;
     }
 };
 
@@ -30,7 +46,9 @@ int main(int argc, char* argv[])
 
     {
         validator validate{};
+        reduction_validator red_val{};
         operation op{};
+        reduction_op red_op{};
 
         // Host only variant
         {
@@ -69,6 +87,20 @@ int main(int argc, char* argv[])
                     replicate_validate_inst, 0, 100),
                 op);
             Kokkos::fence();
+
+            double sum;
+            // Replay Strategy
+            Kokkos::resilience::ResilientReplay<
+                Kokkos::DefaultHostExecutionSpace, reduction_validator>
+                replay_reduce_inst(3, red_val, inst);
+
+            Kokkos::parallel_reduce(
+                Kokkos::RangePolicy<Kokkos::resilience::ResilientReplay<
+                    Kokkos::DefaultHostExecutionSpace, reduction_validator>>(
+                    replay_reduce_inst, 0, 100),
+                red_op,
+                Kokkos::Sum<double, Kokkos::DefaultHostExecutionSpace>(sum));
+            std::cout << "[Sum]: " << sum << std::endl;
         }
 
         // Device only variant

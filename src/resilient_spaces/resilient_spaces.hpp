@@ -7,6 +7,7 @@
 #pragma once
 
 #include <resilient_spaces/replay/parallel_for.hpp>
+#include <resilient_spaces/replay/parallel_reduce.hpp>
 #include <resilient_spaces/replay/replay_execution_space.hpp>
 
 #include <resilient_spaces/replicate/parallel_for.hpp>

@@ -22,3 +22,11 @@ include_directories(src)
 
 enable_testing()
 add_subdirectory(tests)
+
+option(KRS_WITH_APPLICATIONS "Enable building applications" OFF)
+if(KRS_WITH_APPLICATIONS)
+    find_package(MPI REQUIRED)
+    find_package(Boost REQUIRED COMPONENTS program_options)
+
+    add_subdirectory(applications)
+endif()
